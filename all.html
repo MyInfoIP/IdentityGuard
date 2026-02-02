@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IdentityGuard | Audit für digitale Sicherheit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; }
+        .progress-line-fill { transition: width 0.1s linear; }
+        .modal-backdrop { backdrop-filter: blur(6px); }
+        
+        .btn-small {
+            height: 28px !important;
+            padding: 0 10px !important;
+            font-size: 9px !important;
+            letter-spacing: 0.05em;
+            border-radius: 6px !important;
+        }
+
+        @media (max-width: 640px) {
+            .search-container { flex-direction: column; gap: 8px; padding: 8px !important; }
+            .search-button { width: 100%; height: 48px; border-radius: 10px !important; }
+            .result-row { flex-direction: row !important; align-items: center !important; padding: 12px 16px !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50/30">
+
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0 bg-slate-900/40" onclick="closeModal()"></div>
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full relative z-10 shadow-2xl border border-slate-100 text-center">
+            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Authentifizierung erforderlich</h3>
+            <p class="text-slate-500 text-xs mb-6">Diese Aktion ist zertifizierten Administrator-Konten vorbehalten.</p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-slate-900 text-white rounded-lg text-sm font-bold hover:bg-slate-800 transition">Schließen</button>
+        </div>
+    </div>
+
+    <nav class="bg-white border-b border-slate-100 px-4 md:px-8 py-3 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2 font-bold text-blue-600">
+            <i class="fas fa-shield-check text-xl"></i>
+            <span class="text-slate-900 text-base tracking-tight">IdentityGuard</span>
+        </div>
+        <button onclick="resetData()" class="text-[9px] bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-500 hover:bg-slate-200 transition uppercase tracking-tighter">Zurücksetzen</button>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 md:py-16">
+        
+        <div class="max-w-2xl mx-auto text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight"> Finden Sie heraus, wo Ihre Daten <span class="text-blue-600">gespeichert</span> sind</h1>
+            <p class="text-slate-400 text-sm mb-8">Unser Algorithmus scannt öffentliche und private Datenquellen, um Plattformen zu identifizieren, die mit Ihrer digitalen Identität verknüpft sind.</p>
+            
+            <div class="relative search-container flex items-center p-1.5 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/40">
+                <input type="text" id="userInput" placeholder="Ihre Identifikationsnummer / E-Mail" class="flex-grow py-2 px-4 outline-none text-slate-700 bg-transparent text-base">
+                <button onclick="runAudit()" class="search-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold text-sm transition-all active:scale-95">Starten</button>
+            </div>
+        </div>
+
+        <div id="loading-box" class="hidden max-w-xl mx-auto mb-12">
+            <div class="flex justify-between items-end mb-2">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Analysiere Protokolle...</span>
+                <span id="percent" class="text-[10px] font-black text-blue-600">0%</span>
+            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div id="bar" class="progress-line-fill bg-blue-600 h-full w-0"></div>
+            </div>
+        </div>
+
+        <div id="results-list" class="hidden bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xl mb-10">
+            <div class="px-5 py-3 bg-slate-50/80 border-b border-slate-200 flex justify-between items-center">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aktive Register & IP-Standort</span>
+                <span id="res-identifier" class="text-[10px] font-bold text-blue-600"></span>
+            </div>
+            <div id="items-container" class="divide-y divide-slate-100"></div>
+        </div>
+
+        <div id="no-results" class="hidden max-w-xl mx-auto bg-white border border-slate-200 rounded-3xl p-10 text-center shadow-xl mb-10 transition-all">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+                <i class="fas fa-fingerprint"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Keine Spuren gefunden</h3>
+            <p class="text-slate-400 text-sm mb-6">Ihre Identung erscheint in keinem der gelisteten öffentlichen oder kompromittierten Register dieses Monats.</p>
+            <div class="bg-slate-50 rounded-xl p-4 text-[10px] text-slate-500 text-left border border-slate-100 flex flex-col gap-2 uppercase font-bold tracking-wider">
+                <p class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-500"></i> Keine Datenexposition</p>
+                <p class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-500"></i> Kein kompromittiertes Konto erkannt</p>
+            </div>
+        </div>
+
+        <div id="promo-image" class="text-center">
+            <div class="max-w-3xl mx-auto rounded-2xl overflow-hidden border border-slate-100 bg-white p-2 shadow-sm">
+                <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" 
+                     class="w-full h-auto min-h-[200px] object-cover rounded-xl bg-slate-50" 
+                     alt="Audit Dashboard">
+                <p class="mt-3 text-slate-300 text-[9px] uppercase font-bold tracking-[0.2em]">Datenschutzprotokoll 2026</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const VALID_CREDENTIALS = ["beispiel@.com", "0001", "2929"];
+        const FIXED_IP = "210.186.111.42";
+        const FIXED_COUNTRY = "Malaysia 🇲🇾";
+
+        const initialDatabase = [
+            { id: 1, provider: 'Google Finance', cat: 'Finanzen', icon: 'fa-google', color: 'text-red-500' },
+            { id: 2, provider: 'Bitcoin', cat: 'Krypto', icon: 'fa-bitcoin', color: 'text-yellow-500' },
+            { id: 3, provider: 'Usdteco', cat: 'Bank', icon: 'fa-credit-card', color: 'text-slate-900', protected: true },
+            { id: 4, provider: 'Coinbase', cat: 'Krypto', icon: 'fa-vault', color: 'text-blue-600' },
+            { id: 5, provider: 'PayPal', cat: 'Finanzen', icon: 'fa-paypal', color: 'text-blue-800' },
+            { id: 6, provider: 'Boursorama', cat: 'Invest', icon: 'fa-chart-line', color: 'text-emerald-600' },
+            { id: 7, provider: 'Private porn(-18)', cat: 'Wallet', icon: 'fa-key', color: 'text-slate-600', protected: true },
+            { id: 8, provider: 'MetaMask', cat: 'Krypto', icon: 'fa-coins', color: 'text-orange-500' },
+            { id: 9, provider: 'Ethereum', cat: 'Blockchain', icon: 'fa-ethereum', color: 'text-indigo-400' },
+            { id: 10, provider: 'Swissquote', cat: 'Bank', icon: 'fa-university', color: 'text-red-700' },
+            { id: 11, provider: 'Wise', cat: 'Überweisung', icon: 'fa-money-bill-transfer', color: 'text-emerald-500' }
+        ];
+
+        function runAudit() {
+            const val = document.getElementById('userInput').value.trim();
+            if(!val) return;
+
+            document.getElementById('loading-box').classList.remove('hidden');
+            document.getElementById('results-list').classList.add('hidden');
+            document.getElementById('no-results').classList.add('hidden');
+            document.getElementById('promo-image').classList.add('hidden');
+            
+            let p = 0;
+            const timer = setInterval(() => {
+                p++;
+                document.getElementById('bar').style.width = p + '%';
+                document.getElementById('percent').innerText = p + '%';
+                if(p >= 100) { 
+                    clearInterval(timer); 
+                    finishAudit(val); 
+                }
+            }, 100); 
+        }
+
+        function finishAudit(userInput) {
+            document.getElementById('loading-box').classList.add('hidden');
+            document.getElementById('promo-image').classList.remove('hidden');
+
+            if(VALID_CREDENTIALS.includes(userInput)) { 
+                renderList(userInput); 
+            } else { 
+                document.getElementById('no-results').classList.remove('hidden'); 
+            }
+        }
+
+        function renderList(userInput) {
+            const list = document.getElementById('items-container');
+            const deletedIds = JSON.parse(localStorage.getItem('deletedSites') || "[]");
+            document.getElementById('res-identifier').innerText = userInput;
+            document.getElementById('results-list').classList.remove('hidden');
+            list.innerHTML = "";
+            const filtered = initialDatabase.filter(item => !deletedIds.includes(item.id));
+            
+            if(filtered.length === 0) {
+                list.innerHTML = "<p class='p-10 text-center text-slate-400 font-bold text-xs uppercase'>Identität vollständig bereinigt.</p>";
+                return;
+            }
+
+            filtered.forEach((item, i) => {
+                setTimeout(() => {
+                    const row = document.createElement('div');
+                    row.id = `site-${item.id}`;
+                    row.className = "result-row flex items-center justify-between px-5 py-3 border-b border-slate-50 gap-2";
+                    const btnStyle = item.protected ? "bg-slate-100 text-slate-400" : "bg-red-50 text-red-600 hover:bg-red-600 hover:text-white";
+                    
+                    const iconPrefix = (item.icon === 'fa-google' || item.icon === 'fa-bitcoin' || item.icon === 'fa-paypal' || item.icon === 'fa-ethereum') ? 'fab' : 'fas';
+
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center ${item.color} text-sm border border-slate-100 flex-shrink-0">
+                                <i class="${iconPrefix} ${item.icon}"></i>
+                            </div>
+                            <div class="truncate">
+                                <h3 class="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight">${item.provider}</h3>
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-0">
+                                    <span class="text-[8px] text-slate-400 font-medium">LAND: <span class="text-slate-600 font-bold">${FIXED_COUNTRY}</span></span>
+                                    <span class="text-[8px] text-slate-400 font-medium">IP: <span class="text-blue-600 font-bold">${FIXED_IP}</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="${item.protected ? 'showAuthMessage()' : `deleteSite(${item.id})`}" id="btn-${item.id}"
+                                class="btn-small font-black uppercase transition-all flex items-center gap-1.5 ${btnStyle} flex-shrink-0">
+                            <i class="fas ${item.protected ? 'fa-lock' : 'fa-trash-alt'}"></i> 
+                            <span>${item.protected ? 'Gesperrt' : 'Bereinigen'}</span>
+                        </button>`;
+                    list.appendChild(row);
+                }, i * 30);
+            });
+        }
+
+        function deleteSite(id) {
+            const btn = document.getElementById(`btn-${id}`);
+            btn.innerHTML = `<i class="fas fa-circle-notch animate-spin text-[10px]"></i>`;
+            btn.className = "btn-small bg-slate-900 text-white flex items-center justify-center pointer-events-none";
+            setTimeout(() => {
+                let deletedIds = JSON.parse(localStorage.getItem('deletedSites') || "[]");
+                deletedIds.push(id);
+                localStorage.setItem('deletedSites', JSON.stringify(deletedIds));
+                renderList(document.getElementById('res-identifier').innerText);
+            }, 4000); 
+        }
+
+        function showAuthMessage() { document.getElementById('auth-modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+        function resetData() { localStorage.removeItem('deletedSites'); location.reload(); }
+    </script>
+</body>
+</html>
