@@ -53,7 +53,7 @@
         
         <div class="max-w-2xl mx-auto text-center mb-10">
             <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight"> Découvrez où vos données sont <span class="text-blue-600">enregistrées</span></h1>
-            <p class="text-slate-400 text-sm mb-8">Notre algorithme scanne  vos données publics et privées pour identifier les plateformes associées à votre identité numérique.</p>
+            <p class="text-slate-400 text-sm mb-8">Notre algorithme scanne vos données publics et privées pour identifier les plateformes associées à votre identité numérique.</p>
             
             <div class="relative search-container flex items-center p-1.5 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-200/40">
                 <input type="text" id="userInput" placeholder=" Votre identifiant" class="flex-grow py-2 px-4 outline-none text-slate-700 bg-transparent text-base">
@@ -104,21 +104,19 @@
 
     <script>
         const VALID_CREDENTIALS = ["exemple@.com", "0001", "2929"];
-        const FIXED_IP = "210.186.111.42";
-        const FIXED_COUNTRY = "Malaisie 🇲🇾";
 
         const initialDatabase = [
-            { id: 1, provider: 'Google Finance', cat: 'Finance', icon: 'fa-google', color: 'text-red-500' },
-            { id: 2, provider: 'Bitcoin', cat: 'Crypto', icon: 'fa-bitcoin', color: 'text-yellow-500' },
-            { id: 3, provider: 'Usdteco', cat: 'Banque', icon: 'fa-credit-card', color: 'text-slate-900', protected: true },
-            { id: 4, provider: 'Coinbase', cat: 'Crypto', icon: 'fa-vault', color: 'text-blue-600' },
-            { id: 5, provider: 'PayPal', cat: 'Finance', icon: 'fa-paypal', color: 'text-blue-800' },
-            { id: 6, provider: 'Boursorama', cat: 'Invest', icon: 'fa-chart-line', color: 'text-emerald-600' },
-            { id: 7, provider: 'Private porn(-18)', cat: 'Wallet', icon: 'fa-key', color: 'text-slate-600', protected: true },
-            { id: 8, provider: 'MetaMask', cat: 'Crypto', icon: 'fa-coins', color: 'text-orange-500' },
-            { id: 9, provider: 'Ethereum', cat: 'Blockchain', icon: 'fa-ethereum', color: 'text-indigo-400' },
-            { id: 10, provider: 'Swissquote', cat: 'Banque', icon: 'fa-university', color: 'text-red-700' },
-            { id: 11, provider: 'Wise', cat: 'Transfert', icon: 'fa-money-bill-transfer', color: 'text-emerald-500' }
+            { id: 1, provider: 'Google Finance', cat: 'Finance', icon: 'fa-google', color: 'text-red-500', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 2, provider: 'Bitcoin', cat: 'Crypto', icon: 'fa-bitcoin', color: 'text-yellow-500', ip: '210.186.111.42', country: 'Malaisie', flag: '‎🇲🇾' },
+            { id: 3, provider: 'Usdteco', cat: 'Banque', icon: 'fa-credit-card', color: 'text-slate-900', protected: true, ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 4, provider: 'Coinbase', cat: 'Crypto', icon: 'fa-vault', color: 'text-blue-600', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 5, provider: 'PayPal', cat: 'Finance', icon: 'fa-paypal', color: 'text-blue-800', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 6, provider: 'Boursorama', cat: 'Invest', icon: 'fa-chart-line', color: 'text-emerald-600', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 7, provider: 'mvideoporno.xxx', cat: 'Wallet', icon: 'fa-key', color: 'text-slate-600', protected: true, ip: '210.186.111.42', country: 'France', flag: '🇲🇫' },
+            { id: 8, provider: 'MetaMask', cat: 'Crypto', icon: 'fa-coins', color: 'text-orange-500', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 9, provider: 'Ethereum', cat: 'Blockchain', icon: 'fa-ethereum', color: 'text-indigo-400', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 10, provider: 'Swissquote', cat: 'Banque', icon: 'fa-university', color: 'text-red-700', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' },
+            { id: 11, provider: 'Wise', cat: 'Transfert', icon: 'fa-money-bill-transfer', color: 'text-emerald-500', ip: '210.186.111.42', country: 'Malaisie', flag: '🇲🇾' }
         ];
 
         function runAudit() {
@@ -183,8 +181,8 @@
                             <div class="truncate">
                                 <h3 class="font-bold text-slate-900 text-[11px] truncate uppercase tracking-tight">${item.provider}</h3>
                                 <div class="flex flex-wrap items-center gap-x-3 gap-y-0">
-                                    <span class="text-[8px] text-slate-400 font-medium">PAYS: <span class="text-slate-600 font-bold">${FIXED_COUNTRY}</span></span>
-                                    <span class="text-[8px] text-slate-400 font-medium">IP: <span class="text-blue-600 font-bold">${FIXED_IP}</span></span>
+                                    <span class="text-[8px] text-slate-400 font-medium">PAYS: <span class="text-slate-600 font-bold">${item.country} ${item.flag}</span></span>
+                                    <span class="text-[8px] text-slate-400 font-medium">IP: <span class="text-blue-600 font-bold">${item.ip}</span></span>
                                 </div>
                             </div>
                         </div>
